@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+
+# Environment
+venv/
+.env
+
+# Conda
+/conda-env/
+/anaconda3/
+/Miniforge3/
+
+# Mac
+.DS_Store
+
+# Cache
+cache/
+
+# Installers
+*.sh

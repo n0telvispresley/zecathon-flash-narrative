@@ -1,0 +1,24 @@
+# --- Core App ---
+streamlit
+pandas
+plotly
+openpyxl
+
+# --- Data & Scraping (for data gathering) ---
+requests
+beautifulsoup4
+feedparser
+python-dateutil
+
+# --- Analysis & NLP ---
+nltk
+
+# --- Reporting ---
+reportlab
+matplotlib
+
+# --- APIs & Integrations (for the full "pro" version) ---
+boto3
+google-generativeai
+slack-sdk
+python-dotenv
