@@ -1,0 +1,18 @@
+Date,Sentiment,Source,Mention Text,Link,Likes,Comments,mentioned_brands,Reach
+2025-02-15,Positive,Businessday.ng,"Zenith Bank's Hybrid Capital Raise Exceeds Expectations with N350.4 Billion",https://businessday.ng/zenith-capital-raise,0,0,Zenith Bank,75000
+2025-02-15,Positive,Nairametrics.com,"Zenith Bank Hybrid Capital Raise 300% Oversubscribed, Shows High Investor Confidence",https://nairametrics.com/zenith-capital-raise,0,0,Zenith Bank,90000
+2025-02-14,Positive,Punchng.com,"How Dr. Adaora Umeoji Purifies The Atmosphere With Love - CEO Profile",https://punchng.com/adaora-umeoji-profile,0,0,Zenith Bank,120000
+2025-02-10,Positive,Thisdaylive.com,"Zenith Bank Wins 'Best Bank in Nigeria' at Global Finance Awards for Fourth Time",https://thisdaylive.com/zenith-global-finance,0,0,Zenith Bank,65000
+2025-02-05,Positive,Csrreporters.com,"Zenith Bank Donates N100 Million to Support Internally Displaced Persons (IDPs)",https://csrreporters.com/zenith-idp-donation,0,0,Zenith Bank,15000
+2025-02-02,Positive,Thecable.ng,"Zenith Bank Enhances E-Channel Services For Customers with New App Update",https://thecable.ng/zenith-app-update,0,0,Zenith Bank,55000
+2025-01-20,Negative,Fij.ng,"'My Money Vanished After a Failed Zenith Bank Transfer' - Customer Laments",https://fij.ng/zenith-failed-transfer,0,0,Zenith Bank,25000
+2025-01-22,Anger,reddit.com,"Zenith Bank App is the WORST! It's been down for 5 hours. I'm moving to GTCO!",https://reddit.com/r/nigeria/zenith-app-down,150,45,"Zenith Bank,GTCO",19500
+2025-01-23,Negative,Nairametrics.com,"Customers Fume as Zenith Bank Mobile App Downtime Persists for Second Day",https://nairametrics.com/zenith-app-downtime,0,0,Zenith Bank,80000
+2025-01-28,Negative,Thecable.ng,"EFCC Operatives Attempt to Arrest Bank Staff in Court Over N1.2Bn Fraud Case",https://thecable.ng/efcc-zenith-staff-case,0,0,Zenith Bank,45000
+2025-01-30,Neutral,Vanguardngr.com,"CBN Issues New Guidelines for all Banks on Forex Operations",https://vanguardngr.com/cbn-forex-guidelines,0,0,CBN,70000
+2025-02-12,Positive,Punchng.com,"Access Bank Lagos City Marathon 2025: Honoring a Legacy, Inspiring a Nation",https://punchng.com/access-marathon-2025,0,0,Access Bank,150000
+2025-02-13,Positive,Nairametrics.com,"Access Holdings Releases AccessGive to 'Carry Forward' Herbert Wigwe's Legacy",https://nairametrics.com/accessgive-legacy,0,0,Access Holdings,95000
+2025-01-15,Negative,Fij.ng,"First Bank Knew About Fraudulent N10.5m Transfer, Did Nothing. CBN Claimed No Wrongdoing",https://fij.ng/first-bank-fraud,0,0,First Bank,30000
+2025-02-01,Positive,Businessday.ng,"GTCO Transforms Lives with Waste-for-Gas Initiative, Distributes 3,000 Gas Cylinders",https://businessday.ng/gtco-gas-initiative,0,0,GTCO,40000
+2025-02-05,Negative,Nairametrics.com,"GTCO's N400.5bn Public Offer Undersubscribed By 48-Percent",https://nairametrics.com/gtco-offer-undersubscribed,0,0,GTCO,60000
+2025-02-10,Neutral,Dmarketforces.com,"GCR Revises First Bank of Nigeria Outlook to Rating Watch Evolving",https://dmarketforces.com/first-bank-rating,0,0,First Bank of Nigeria,20000
