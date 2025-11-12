@@ -5,16 +5,19 @@ import re
 from datetime import datetime, timedelta, timezone
 from dateutil import parser as dateparser
 from nltk.collocations import BigramAssocMeasures, BigramCollocationFinder
-import pandas as pd # Make sure pandas is imported for pd.isna
+import pandas as pd # Make sure pandas is imported
 
-# --- NLTK Setup ---
+# --- NLTK Setup (THIS IS THE FIX) ---
 try:
     nltk.data.find('tokenizers/punkt')
     nltk.data.find('corpora/stopwords')
+    nltk.data.find('tokenizers/punkt_tab') # <-- ADDED THIS CHECK
 except LookupError:
     print("NLTK data not found. Downloading...")
     nltk.download('punkt', quiet=True)
     nltk.download('stopwords', quiet=True)
+    nltk.download('punkt_tab', quiet=True) # <-- ADDED THIS DOWNLOAD
+# --- END OF FIX ---
 
 stop_words = set(nltk.corpus.stopwords.words('english'))
 stop_words.update(['com', 'www', 'http', 'https', 'co', 'uk', 'amp', 'rt', 'via'])
@@ -128,9 +131,15 @@ def compute_kpis(full_data, campaign_messages, brand, competitors):
         for b_name in present_brands_in_item:
             brand_counts[b_name] += 1
     # --- End of Loop ---
+    
+    # Find all unique brands mentioned
+    all_brands_in_data = set(brand_counts.keys())
+    for b in all_brands_list: # Ensure the core brands are included
+        all_brands_in_data.add(b)
+    final_all_brands_list = sorted(list(all_brands_in_data), key=lambda x: (x != brand, x not in competitors, x)) # Sort main brand first, then competitors
 
     total_appearances = sum(brand_counts.values())
-    sov = [(brand_counts[b] / total_appearances * 100) if total_appearances > 0 else 0 for b in all_brands_list]
+    sov = [(brand_counts[b] / total_appearances * 100) if total_appearances > 0 else 0 for b in final_all_brands_list]
 
     sentiment_counts = Counter(tones)
     sentiment_ratio = {tone: count / total_mentions * 100 for tone, count in sentiment_counts.items()}
@@ -170,8 +179,7 @@ def compute_kpis(full_data, campaign_messages, brand, competitors):
     for item in full_data:
         try:
             reach_val = item.get('reach', 0)
-            if pd.isna(reach_val): # Handle NaN
-                reach_val = 0
+            if pd.isna(reach_val): reach_val = 0
             reach += int(reach_val)
         except (ValueError, TypeError):
             continue
@@ -184,6 +192,6 @@ def compute_kpis(full_data, campaign_messages, brand, competitors):
         'mpi': mpi,
         'engagement_rate': engagement_rate,
         'reach': reach,
-        'all_brands': all_brands_list,
+        'all_brands': final_all_brands_list,
         'analyzed_data': full_data # Return the data with sentiments/themes added
     }
