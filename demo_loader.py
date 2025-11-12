@@ -11,84 +11,74 @@ SUMMARY_FILE = "demo_ai_summary.txt"
 @st.cache_data(ttl=600) # Cache the data for 10 minutes
 def load_data_from_csv():
     """
-    Loads the pre-compiled demo data from the CSV file.
-    This is now CASE-INSENSITIVE and column-order independent.
-    It maps known columns and adds defaults for missing KPI columns.
+    Loads the demo data from the CSV file.
+    - Case-insensitive headers.
+    - Renames "Mention Text" to "text".
+    - Safely cleans and converts Likes, Comments, and Reach to numbers.
+    - Adds default 'authority' and 'theme' if missing.
     """
     try:
-        # We assume the CSV is in the root folder with the script
         df = pd.read_csv(DATA_FILE)
         
         # --- NEW ROBUST LOADER ---
         # 1. Standardize all column headers: lowercase and stripped of spaces
-        original_columns = df.columns
         df.columns = [str(col).lower().strip() for col in df.columns]
-        
-        # 2. Define all possible user-facing names (lowercase) 
-        #    and their internal app names
+
+        # 2. Define the mapping from YOUR CSV to what the APP EXPECTS
         column_map = {
-            # App Internal Name: [Possible User CSV Names (all lowercase)]
-            'date': ['date'],
-            'source': ['source'],
-            'text': ['text', 'mention text', 'headline', 'content'], # Will map 'Mention Text' to 'text'
-            'link': ['link', 'url'],
-            'likes': ['likes'],
-            'comments': ['comments'],
-            'reach': ['reach'],
-            'authority': ['authority'],
-            'mentioned_brands': ['mentioned_brands', 'mentioned_brand'] # Handles singular/plural
+            "date": "date",
+            "source": "source",
+            "mention text": "text", # <-- This is the key rename
+            "link": "link",
+            "likes": "likes",
+            "comments": "comments",
+            "reach": "reach"
+            # We will IGNORE 'headline' and 'mentioned_brand'
         }
+        
+        # 3. Rename the columns we care about
+        df = df.rename(columns=column_map)
 
-        # 3. Create a new, clean DataFrame to build
-        clean_df = pd.DataFrame()
-        mapped_internal_names = []
-
-        # 4. Loop through our app's needs and find the first matching column
-        for internal_name, possible_user_names in column_map.items():
-            for user_name in possible_user_names:
-                if user_name in df.columns:
-                    clean_df[internal_name] = df[user_name]
-                    mapped_internal_names.append(internal_name)
-                    break # Found the best match, move to next internal name
-
-        # 5. Check for ABSOLUTE minimum required columns
-        required_for_analysis = ['text', 'date', 'source']
-        missing_essentials = set(required_for_analysis) - set(clean_df.columns)
+        # 4. Check for essential columns (text, date, source)
+        required_cols = ['text', 'date', 'source']
+        missing_essentials = set(required_cols) - set(df.columns)
         if missing_essentials:
-            st.error(f"Demo data CSV is invalid! It MUST contain columns for: {', '.join(required_for_analysis)}")
+            st.error(f"Demo data CSV is invalid! It MUST contain: {', '.join(required_cols)}")
             return []
 
-        # 6. Add default values for optional KPI columns if they weren't found
-        if 'likes' not in clean_df.columns: clean_df['likes'] = 0
-        if 'comments' not in clean_df.columns: clean_df['comments'] = 0
-        if 'reach' not in clean_df.columns: clean_df['reach'] = 1000 # Default reach
-        if 'authority' not in clean_df.columns: clean_df['authority'] = 5 # Default authority
+        # 5. Add default values for optional KPI columns if they weren't found
+        if 'likes' not in df.columns: df['likes'] = 0
+        if 'comments' not in df.columns: df['comments'] = 0
+        if 'reach' not in df.columns: df['reach'] = 1000
+        if 'authority' not in df.columns: df['authority'] = 5
+        if 'theme' not in df.columns: df['theme'] = 'General News' # Will be overwritten
+
+        # 6. --- CRITICAL: Clean the numeric columns ---
+        # This fixes the "50,000" and empty (,,) problems
+        for col in ['likes', 'comments', 'reach']:
+            if col in df.columns:
+                # Convert to string, remove quotes, remove commas
+                df[col] = df[col].astype(str).str.replace('"', '').str.replace(',', '')
+                # Fill empty/NaN values with '0'
+                df[col] = df[col].fillna('0')
+                # Convert to numeric, forcing errors to 0
+                df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
+        # --- END OF CLEANING ---
             
-        # These columns will be CREATED by analysis.py, so we don't need defaults:
-        # - sentiment
-        # - theme
-        # - mentioned_brands (analysis.py creates this, but we map it just in case)
-        
-        # --- END OF FIX ---
-            
-        print("Demo data loaded, columns standardized and mapped successfully.")
-        # Convert DataFrame to the dictionary format our app expects
-        return clean_df.to_dict('records')
+        print("Demo data loaded, cleaned, and columns mapped successfully.")
+        return df.to_dict('records')
         
     except FileNotFoundError:
         st.error(f"FATAL: '{DATA_FILE}' not found! Please add it to the root folder.")
-        print(f"FATAL: '{DATA_FILE}' not found. Please add it to the project's root directory.")
         return []
     except Exception as e:
         st.error(f"An error occurred while loading {DATA_FILE}: {e}")
-        print(f"An error occurred while loading {DATA_FILE}: {e}")
         return []
 
 @st.cache_data(ttl=3600) # Cache the summary for 1 hour
 def load_ai_summary():
     """
     Loads the pre-written, professional AI summary from a text file.
-    This simulates the call to bedrock_llm.generate_llm_report_summary().
     """
     try:
         with open(SUMMARY_FILE, "r") as f:
@@ -97,41 +87,24 @@ def load_ai_summary():
         return summary_text
     except FileNotFoundError:
         st.error(f"FATAL: '{SUMMARY_FILE}' not found! Please add it to the root folder.")
-        print(f"FATAL: '{SUMMARY_FILE}' not found. Please add it to the project's root directory.")
-        return "**Error:** AI Summary file ('demo_ai_summary.txt') not found. Could not generate report."
+        return "**Error:** AI Summary file ('demo_ai_summary.txt') not found."
     except Exception as e:
         st.error(f"An error occurred while loading {SUMMARY_FILE}: {e}")
-        print(f"An error occurred while loading {SUMMARY_FILE}: {e}")
         return f"**Error:** Could not read AI summary file: {e}"
 
 # --- Self-Test (for debugging) ---
 if __name__ == "__main__":
-    # This allows you to test this file directly
     print("Running demo_loader.py self-test...")
-    
-    # Test data loading
     data = load_data_from_csv()
     if data:
         print(f"Successfully loaded {len(data)} mentions.")
-        print("First mention sample (after renaming):")
-        # Print only the keys we expect to be there
+        print("First mention sample (after cleaning):")
         if data[0]:
             print({
                 'text': data[0].get('text', 'N/A')[:50] + "...",
-                'sentiment': data[0].get('sentiment', 'N/A'),
-                'theme': data[0].get('theme', 'N/A'),
-                'mentioned_brands': data[0].get('mentioned_brands', 'N/A'),
-                'reach': data[0].get('reach', 'N/A')
+                'reach': data[0].get('reach', 'N/A'),
+                'likes': data[0].get('likes', 'N/A'),
+                'comments': data[0].get('comments', 'N/A')
             })
     else:
         print("Data loading FAILED.")
-        
-    print("-" * 20)
-    
-    # Test summary loading
-    summary = load_ai_summary()
-    if "Error:" not in summary:
-        print("Successfully loaded AI summary:")
-        print(summary[:150] + "...")
-    else:
-        print("AI summary loading FAILED.")
