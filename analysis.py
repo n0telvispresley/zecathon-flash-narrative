@@ -7,35 +7,67 @@ from dateutil import parser as dateparser
 from nltk.collocations import BigramAssocMeasures, BigramCollocationFinder
 import pandas as pd # Make sure pandas is imported
 
-# --- NLTK Setup (THIS IS THE FIX) ---
+# --- NLTK Setup ---
 try:
     nltk.data.find('tokenizers/punkt')
     nltk.data.find('corpora/stopwords')
-    nltk.data.find('tokenizers/punkt_tab') # <-- ADDED THIS CHECK
 except LookupError:
     print("NLTK data not found. Downloading...")
     nltk.download('punkt', quiet=True)
     nltk.download('stopwords', quiet=True)
-    nltk.download('punkt_tab', quiet=True) # <-- ADDED THIS DOWNLOAD
-# --- END OF FIX ---
 
 stop_words = set(nltk.corpus.stopwords.words('english'))
 stop_words.update(['com', 'www', 'http', 'https', 'co', 'uk', 'amp', 'rt', 'via'])
 
-# --- 1. KEYWORD SENTIMENT ANALYSIS ---
+# --- 1. KEYWORD SENTIMENT ANALYSIS (EXPANDED) ---
 def analyze_sentiment_keywords(text):
     """
-    Analyzes sentiment based on keywords.
+    Analyzes sentiment based on extensive keywords.
     Returns a single sentiment string.
     """
     if not text: return 'neutral'
     text_lower = str(text).lower()
 
-    positive_kws = ['good', 'great', 'excellent', 'positive', 'love', 'awesome', 'best', 'happy', 'like', 'amazing', 'superb', 'fantastic', 'recommend', 'perfect', 'honoured', 'lauds', 'empower', 'support', 'champions', 'wins', 'upgrades', 'successful', 'oversubscribed', 'confidence']
-    negative_kws = ['bad', 'poor', 'terrible', 'negative', 'hate', 'awful', 'worst', 'sad', 'dislike', 'broken', 'fail', 'issue', 'problem', 'disappointed', 'avoid', 'scam', 'fraud', 'downtime', 'glitches', 'fume', 'arrest', 'rift', 'vanished', 'failed', 'undersubscribed', 'loss']
-    anger_kws = ['angry', 'furious', 'rage', 'mad', 'outrage', 'pissed', 'fuming', 'livid', 'worst!']
-    appreciation_kws = ['thank', 'appreciate', 'grateful', 'thanks', 'kudos', 'cheers', 'props', 'helpful', 'honoured', 'lauds', 'legacy', 'honoring']
-    mixed_kws = ['but', 'however', 'although', 'yet', 'still', 'despite']
+    # --- NEW EXTENSIVE KEYWORD LISTS ---
+    positive_kws = [
+        # Emotional
+        'good', 'great', 'excellent', 'positive', 'love', 'awesome', 'best', 'happy', 'like', 'amazing', 'superb',
+        'fantastic', 'recommend', 'perfect', 'thrilled', 'delighted', 'satisfied', 'easy', 'seamless',
+        
+        # Factual (Business/PR)
+        'wins', 'won', 'award', 'recognition', 'honoured', 'named as', 'ranked #1', 'leading', 'top-tier',
+        'successful', 'successfully', 'oversubscribed', 'exceeds expectations', 'confidence',
+        'grows', 'growth', 'rise', 'increase', 'expansion', 'accelerate', 'boost', 'outperforms',
+        'launches', 'unveils', 'introduces', 'new initiative', 'new product', 'new feature',
+        'profit', 'profits', 'profitable', 'strong performance', 'robust', 'stronger',
+        'upgrades', 'stable outlook', 'reaffirms', 'commitment', 'strengthening'
+    ]
+    appreciation_kws = [
+        'thank', 'thanks', 'grateful', 'kudos', 'congratulations', 'congrats', 'props', 'helpful',
+        'appreciate', 'appreciation', 'lauds', 'commends', 'praised', 'legacy', 'honoring',
+        'empower', 'support', 'champions', 'donates', 'donation', 'csr', 'esg', 'community', 'foundation', 'sponsors'
+    ]
+    negative_kws = [
+        # Emotional
+        'bad', 'poor', 'terrible', 'negative', 'hate', 'awful', 'worst', 'sad', 'dislike', 'broken',
+        'disappointed', 'frustrated', 'horrible', 'useless', 'embarrassing',
+        
+        # Factual (Business/PR)
+        'fail', 'failed', 'issue', 'problem', 'avoid', 'scam', 'fraud', 'fraudulent', 'allegation', 'alleges',
+        'downtime', 'glitch', 'glitches', 'crashes', 'down', 'outage', 'unauthorized',
+        'fined', 'sanctioned', 'penalty', 'lawsuit', 'court', 'arrest', 'efcc',
+        'crisis', 'vulnerabilities', 'threats', 'risk', 'stifling', 'rift',
+        'loss', 'losses', 'decline', 'dip', 'drop', 'slump', 'erosion', 'undersubscribed',
+        'complaint', 'complaints', 'fume', 'laments', 'outcry', 'slams'
+    ]
+    anger_kws = [
+        'angry', 'furious', 'rage', 'mad', 'outrage', 'pissed', 'fuming', 'livid', 'worst!',
+        'stealing', 'thieves', 'scammed', 'disgusted'
+    ]
+    mixed_kws = [
+        'but', 'however', 'although', 'yet', 'still', 'despite', 'while', 'though'
+    ]
+    # --- END OF NEW LISTS ---
 
     pos_count = sum(1 for k in positive_kws if re.search(r'\b' + re.escape(k) + r'\b', text_lower))
     neg_count = sum(1 for k in negative_kws if re.search(r'\b' + re.escape(k) + r'\b', text_lower))
@@ -49,7 +81,7 @@ def analyze_sentiment_keywords(text):
     if neg_count > 0: return 'negative'
     if pos_count > 0: return 'positive'
     if app_count > 0: return 'appreciation'
-    return 'neutral'
+    return 'neutral' # Only if no other keywords are found
 
 # --- 2. KEYWORD/PHRASE EXTRACTION ---
 def extract_keywords(all_text, brand, competitors):
@@ -63,7 +95,7 @@ def extract_keywords(all_text, brand, competitors):
     for c in competitors:
         dynamic_stop_words.add(c.lower())
     # Add generic bank words
-    dynamic_stop_words.update(['bank', 'plc', 'ltd', 'group', 'holdings', 'zenith', 'access', 'gtco', 'first', 'cbn'])
+    dynamic_stop_words.update(['bank', 'plc', 'ltd', 'group', 'holdings', 'zenith', 'access', 'gtco', 'first', 'cbn', 'customer', 'customers'])
 
     filtered_tokens = [t for t in tokens if len(t) > 2 and t.isalpha() and t not in dynamic_stop_words]
     
@@ -101,20 +133,20 @@ def compute_kpis(full_data, campaign_messages, brand, competitors):
         text_lower = str(text).lower()
 
         # 1. Perform Sentiment Analysis (Live)
-        sentiment = analyze_sentiment_keywords(text)
+        sentiment = analyze_sentiment_keywords(text) # Uses our new, better lists
         item['sentiment'] = sentiment
         tones.append(sentiment)
         
-        # 2. Perform Thematic Analysis (Live)
-        if any(kw in text_lower for kw in ['csr', 'esg', 'donation', 'community', 'foundation', 'initiative']):
+        # 2. Perform Thematic Analysis (Live) - Also expanded
+        if any(kw in text_lower for kw in ['csr', 'esg', 'donation', 'community', 'foundation', 'initiative', 'sustainability', 'empower', 'scholarship']):
             item['theme'] = 'CSR/ESG'
-        elif any(kw in text_lower for kw in ['ceo', 'gmd', 'profit', 'results', 'acquisition', 'corporate', 'raise', 'capital', 'bond']):
+        elif any(kw in text_lower for kw in ['ceo', 'gmd', 'profit', 'results', 'acquisition', 'corporate', 'raise', 'capital', 'bond', 'earnings', 'dividend', 'financials', 'pre-tax', 'pat', 'shareholders']):
             item['theme'] = 'Corporate'
-        elif any(kw in text_lower for kw in ['partner', 'sponsorship', 'marathon']):
+        elif any(kw in text_lower for kw in ['partner', 'sponsorship', 'marathon', 'zecathon', 'collaboration', 'champions']):
             item['theme'] = 'Partnership/Sponsorship'
-        elif any(kw in text_lower for kw in ['app', 'loan', 'card', 'customer service', 'downtime', 'glitch', 'e-channel', 'transfer']):
+        elif any(kw in text_lower for kw in ['app', 'loan', 'card', 'customer service', 'downtime', 'glitch', 'e-channel', 'transfer', 'pos', 'digital', 'feature', 'platform']):
             item['theme'] = 'Product/Service'
-        elif any(kw in text_lower for kw in ['fraud', 'cbn', 'efcc', 'fine', 'court', 'scam', 'allegation', 'rift']):
+        elif any(kw in text_lower for kw in ['fraud', 'cbn', 'efcc', 'fine', 'court', 'scam', 'allegation', 'rift', 'lawsuit', 'crisis', 'vulnerability', 'sanction', 'erosion']):
             item['theme'] = 'Legal/Risk'
         else:
             item['theme'] = 'General News'
@@ -136,7 +168,7 @@ def compute_kpis(full_data, campaign_messages, brand, competitors):
     all_brands_in_data = set(brand_counts.keys())
     for b in all_brands_list: # Ensure the core brands are included
         all_brands_in_data.add(b)
-    final_all_brands_list = sorted(list(all_brands_in_data), key=lambda x: (x != brand, x not in competitors, x)) # Sort main brand first, then competitors
+    final_all_brands_list = sorted(list(all_brands_in_data), key=lambda x: (x != brand, x not in competitors, x)) # Sort main brand first
 
     total_appearances = sum(brand_counts.values())
     sov = [(brand_counts[b] / total_appearances * 100) if total_appearances > 0 else 0 for b in final_all_brands_list]
