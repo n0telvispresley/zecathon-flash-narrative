@@ -1,33 +1,126 @@
-#Flash Narrative ✨
+# ✨ Flash Narrative (Zecathon 2025 Build)
 
-AI-Powered Real-Time Public Relations Monitoring & Analysis
+**AI-Powered Reputation Intelligence Dashboard for Banking**
 
-This prototype was built in 72 hours for the Zenith Bank Hackathon 2025 [cite: A, B]. It is a high-fidelity, functional prototype of a SaaS platform designed to help bank reputation managers proactively monitor media, analyze sentiment, and track competitors.
+> _“From reactive crisis response to proactive narrative control.”_
 
-###1. The Problem (Banking Reputation)Banks face intense public scrutiny. Reputation management teams struggle to track mentions across vast news, blog, and social landscapes, often missing critical real-time sentiment shifts concerning products (app downtime, card issues), services (customer support), or executive actions.Standard tools lack nuanced sentiment (e.g., 'anger' vs. 'negative') and cannot measure PR-specific KPIs like Message Penetration or Share of Voice against competitors, delaying crisis response and hindering proactive reputation management.
+This is a **high-fidelity, fully functional prototype** built in **72 hours** for the **Zenith Bank Hackathon 2025** [[A]](https://zecathon2025.devpost.com), [[B]](https://github.com/n0telvispresley/zecathon-flash-narrative).  
+It delivers a **faster, smarter, and proactive** approach to brand reputation management in the high-stakes financial sector.
 
-##2. Our Solution (The "Offline-First" Demo)To ensure a fast, reliable, and 100% functional prototype that adheres to the hackathon's "no access to live... production APIs" [cite: D] rule, we built this app in "Demo Mode."Instead of risking a live API call on event Wi-Fi, our app:Loads a Pre-Analyzed Dataset: Ingests a demo_data.csv file containing real (but "canned") mentions for Zenith Bank and its competitors.Runs Live Local Analysis: The app does not just display static data. It runs its own Python analysis engine (analysis.py) live to:Perform nuanced Sentiment Analysis (e.g., 'anger', 'positive') using a custom keyword engine.Perform Thematic Categorization (e.g., 'CSR/ESG', 'Corporate', 'Legal/Risk').Identify all Mentioned Brands for SOV.Calculate all KPIs (MIS, MPI, SOV, etc.) in real-time.Simulates AI Reporting: Instantly loads a pre-written, professional AI summary (demo_ai_summary.txt) to simulate a live LLM's output.This approach proves our core analysis engine is functional, fast, and ready for integration with live APIs.
+---
 
-###3. Key Features (What you'll see)Styled KPI Dashboard: 4 key metrics (MIS, MPI, Engagement, Reach) that are styled red or green based on custom thresholds set in the sidebar.Sentiment Analysis: A doughnut chart breaking down all mentions by 6 nuanced sentiments.Thematic Analysis: A bar chart (inspired by the Fidelity report [cite: 565-576]) showing the percentage of mentions related to Corporate, CSR/ESG, Product/Service, etc.Share of Voice (SOV): A bar chart comparing Zenith Bank's media presence against its key competitors.Keyword Extraction: An NLTK-powered table showing the top 10 trending keywords and phrases.Automated Reporting:PDF Report: Generates a multi-page PDF report with all charts, KPIs, and the full professional AI summary.Excel Export: Generates a detailed .xlsx file of all analyzed mention data.Email Sending: Integrates with SMTP to email both reports to any stakeholder.
+## 🚀 LIVE DEMO
 
-###4. Tech Stack (Hackathon Build)Core: PythonFrontend & UI: Streamlit, Plotly ExpressData Analysis: Pandas, NLTKReport Generation: ReportLab, Matplotlib, OpenpyxlAlerting (Simulation): SMTPlib, ServiceNow API (via requests)Environment: Conda
+Test the **fully interactive, styled, and offline-first** prototype here:  
+[https://zecathon-flash-narrative.streamlit.app/dashboard](https://zecathon-flash-narrative.streamlit.app/dashboard)
 
-###5. How to Run This Demo:
+- **Login**: `zenith`
+- **Password**: `pass`
 
-Clone the Repo:git clone [https://github.com/n0telvispresley/zecathon-flash-narrative.git](https://github.com/n0telvispresley/zecathon-flash-narrative.git)
+> **Note**: Per the hackathon rule — _"no live APIs allowed"_ [[D]](#references) — this demo runs in **100% reliable Offline-First mode**. See ["Hackathon Strategy"](#our-hackathon-strategy-reliability-first) below.
+
+---
+
+## 1. The Problem: A Reactive Reputation
+
+In banking, **reputation is capital**. Yet PR teams face systemic bottlenecks:
+
+| Challenge                | Impact                                                                   |
+| ------------------------ | ------------------------------------------------------------------------ |
+| **Data Overload**        | Manual tracking of news, blogs, and social media is impossible           |
+| **Delayed Insights**     | Negative stories escalate before detection                               |
+| **Superficial Analysis** | Tools report “positive/negative” but miss **Anger** vs. **Appreciation** |
+| **No Measurable ROI**    | PR value unproven — no SOV, MPI, or campaign attribution                 |
+
+---
+
+## 2. Our Solution: Flash Narrative
+
+**Flash Narrative** transforms reputation management from **reactive** to **proactive**.
+
+Instead of _showing data_, it **delivers answers**.
+
+### Core Capabilities
+
+| Feature                   | Value                                                                                              |
+| ------------------------- | -------------------------------------------------------------------------------------------------- |
+| **Nuanced Sentiment**     | Detects **Anger** (high-risk) vs. **Negative** (mild)                                              |
+| **Thematic Intelligence** | Auto-categorizes articles: _Corporate, CSR/ESG, Product/Service, Legal/Risk_                       |
+| **PR-Specific KPIs**      | Tracks **Share of Voice (SOV)**, **Message Penetration Index (MPI)**, **Media Impact Score (MIS)** |
+| **One-Click Reporting**   | Generates **PDF, Excel, and Email-ready** reports with **AI-driven summaries & recommendations**   |
+
+---
+
+## 3. Our Hackathon Strategy: Reliability First
+
+> **Rule**: _“No access to live banking or production APIs”_ [[D]](#references)
+
+We turned this constraint into a **strength**.
+
+An app that crashes during demo due to Wi-Fi is **not feasible**.  
+So we built **Flash Narrative** in **100% reliable Offline-First mode**:
+
+| Component                | Implementation                                                                             |
+| ------------------------ | ------------------------------------------------------------------------------------------ |
+| **Real Dataset**         | `demo_data.csv` — 600+ real Zenith & competitor media mentions (manually curated)          |
+| **Live Local Engine**    | On “Run Analysis”, the app **processes all 600+ rows in real-time** using:                 |
+|                          | → Sentiment engine (`analysis.py`)                                                         |
+|                          | → Thematic categorization                                                                  |
+|                          | → Brand extraction (SOV)                                                                   |
+|                          | → KPI calculations (MIS, MPI, Reach)                                                       |
+| **Simulated AI Summary** | `demo_ai_summary.txt` — pre-written, professional-grade LLM output to prove report quality |
+
+> **Result**: A **fully working, fast, and demo-proof** system — no API timeouts, no latency.
+
+---
+
+## 4. Tech Stack
+
+| Layer             | Technology                                             |
+| ----------------- | ------------------------------------------------------ |
+| **Core**          | Python 3.11                                            |
+| **Frontend**      | Streamlit + **custom Zenith-branded CSS**              |
+| **Analysis**      | Pandas, NLTK (keyword/phrase extraction)               |
+| **Visualization** | Plotly Express                                         |
+| **Reports**       | ReportLab (PDF), Matplotlib (charts), Openpyxl (Excel) |
+| **Email/Alerts**  | SMTPlib (email), ServiceNow (simulated)                |
+| **Environment**   | Conda                                                  |
+
+---
+
+## 5. Evaluation Criteria: How We Excel [[E]](#references)
+
+| Criteria        | Our Response                                                                                                                                                                  |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Innovation**  | • **Nuanced Sentiment**: Anger vs. Appreciation <br>• **MPI**: Rare KPI for message landing <br>• **Thematic Audit**: Inspired by Fidelity’s media reports [[F]](#references) |
+| **Feasibility** | • **100% functional now** <br>• Live analysis engine proven <br>• API integration = plug-and-play                                                                             |
+| **Impact**      | • **Crisis prevention** (e.g., app downtime anger detection) <br>• **90% automation** of PR workflows <br>• **Executive-ready reports**                                       |
+| **Scalability** | **Phase 1**: Streamlit prototype (now) <br>**Phase 2**: FastAPI backend <br>**Phase 3**: React frontend + PostgreSQL + live APIs (NewsAPI, X Pro, Brandwatch)                 |
+
+---
+
+## 6. Presentation & UX
+
+- **Branded UI**: Gold, black, and beige — **Zenith Bank identity**
+- **Logical Flow**: KPIs → Charts → Tables → Reports
+- **Professional Outputs**: PDF/Excel reports **ready for C-suite**
+
+---
+
+## 7. How to Run Locally
+
+```bash
+# 1. Clone
+git clone https://github.com/n0telvispresley/zecathon-flash-narrative.git
 cd zecathon-flash-narrative
-Create & Activate Conda Environment:conda create -n zecathon python=3.11
+
+# 2. Create environment
+conda create -n zecathon python=3.11
 conda activate zecathon
-Install Dependencies:pip install -r requirements.txt
-Run the App:streamlit run app.py
 
-###6. Scalability & Production Roadmap (Beyond the Hackathon)
-This Streamlit app is our proven prototype. For "wide-scale adoption" [cite: E], our architecture evolves:
+# 3. Install
+pip install -r requirements.txt
 
-Backend: The core Python logic (analysis.py, report_gen.py) and AI modules (bedrock.py, gemini.py) are exposed as a FastAPI backend.
-
-Frontend: We build a production-grade React or Next.js frontend for a fast, custom, multi-tenant client experience.
-
-Data: The demo_loader.py is replaced with live API clients for NewsAPI, X (Twitter) Pro API, and Brandwatch (for FB/IG).
-
-Database: demo_data.csv is replaced by a scalable PostgreSQL or MongoDB database to store millions of mentions
+# 4. Run
+streamlit run app.py
+```

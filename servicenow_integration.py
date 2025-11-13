@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()  # Loads .env file if present
+
 import os
 import requests
 import base64
@@ -8,6 +11,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 
+# ... (create_servicenow_ticket and send_alert functions remain the same) ...
 def create_servicenow_ticket(title, description, urgency='2', impact='2'):
     """
     Create a ServiceNow incident ticket.
@@ -20,21 +24,12 @@ def create_servicenow_ticket(title, description, urgency='2', impact='2'):
     if not all([instance, user, password]):
         print(f"[Mock ServiceNow Ticket] {title} - {description}")
         return
-
+    # ... (rest of try/except block) ...
     try:
         auth = base64.b64encode(f"{user}:{password}".encode()).decode()
-        headers = {
-            'Authorization': f'Basic {auth}',
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        }
+        headers = { 'Authorization': f'Basic {auth}', 'Content-Type': 'application/json', 'Accept': 'application/json' }
         url = f"https://{instance}.service-now.com/api/now/table/incident"
-        body = {
-            'short_description': title,
-            'description': description,
-            'urgency': urgency,
-            'impact': impact
-        }
+        body = { 'short_description': title, 'description': description, 'urgency': urgency, 'impact': impact }
         response = requests.post(url, headers=headers, json=body, timeout=10)
         response.raise_for_status()
         ticket_num = response.json().get('result', {}).get('number', 'UNKNOWN')
@@ -61,11 +56,11 @@ def send_alert(msg, channel='#alerts', to_email=None):
             print(f"[Slack Error] {e}")
 
     if not sent and to_email:
-        smtp_server = os.getenv('SMTP_SERVER')
+        smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
         smtp_port = int(os.getenv('SMTP_PORT', 587))
         smtp_user = os.getenv('SMTP_USER')
-        smtp_pass = os.getenv('SMTP_PASS')
-        if smtp_user and smtp_pass and smtp_server:
+        smtp_pass = os.getenv('SMTP_PASS') # Use App Password for Gmail
+        if smtp_user and smtp_pass:
             try:
                 server = smtplib.SMTP(smtp_server, smtp_port, timeout=10)
                 server.starttls()
@@ -83,14 +78,16 @@ def send_alert(msg, channel='#alerts', to_email=None):
     if not sent:
         print(f"[Alert Fallback - Print] {msg}")
 
+# --- FUNCTION FOR SENDING REPORTS WITH ATTACHMENTS (UPDATED) ---
 def send_report_email_with_attachments(to_email, subject, body, attachments):
     """
     Sends an email with one or more attachments. Returns True/False.
+    NOW USES SMTP_SSL on PORT 465 for better reliability.
     """
     smtp_server = os.getenv('SMTP_SERVER')
-    smtp_port = int(os.getenv('SMTP_PORT', 587))
+    smtp_port = int(os.getenv('SMTP_PORT', 465)) # <-- Use 465 as default
     smtp_user = os.getenv('SMTP_USER')
-    smtp_pass = os.getenv('SMTP_PASS') # Use App Password for Gmail
+    smtp_pass = os.getenv('SMTP_PASS') # Use App Password
 
     if not all([smtp_server, smtp_user, smtp_pass, to_email]):
         print("[Email Error] Missing SMTP credentials or recipient email.")
@@ -111,13 +108,22 @@ def send_report_email_with_attachments(to_email, subject, body, attachments):
             part.add_header('Content-Disposition', f"attachment; filename= {filename}")
             msg.attach(part)
 
-        server = smtplib.SMTP(smtp_server, smtp_port, timeout=20)
-        server.ehlo()
-        server.starttls()
-        server.ehlo()
+        # --- THIS IS THE FIX ---
+        # Use SMTP_SSL (Port 465) instead of SMTP + starttls (Port 587)
+        # This is more robust against local network/firewall blocks.
+        if smtp_port == 465:
+            server = smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=20)
+        else:
+            server = smtplib.SMTP(smtp_server, smtp_port, timeout=20)
+            server.ehlo()
+            server.starttls()
+            server.ehlo()
+        
         server.login(smtp_user, smtp_pass)
         server.send_message(msg)
         server.quit()
+        # --- END OF FIX ---
+        
         print(f"[Email Sent] Report with {len(attachments)} attachment(s) sent to {to_email}")
         return True # Indicate success
     except smtplib.SMTPAuthenticationError:
