@@ -32,7 +32,8 @@ def load_data_from_csv():
             "link": "link",
             "likes": "likes",
             "comments": "comments",
-            "reach": "reach"
+            "reach": "reach",
+            "headline": "headline"
             # We will IGNORE 'headline' and 'mentioned_brand'
         }
         
@@ -77,20 +78,26 @@ def load_data_from_csv():
 
 @st.cache_data(ttl=3600) # Cache the summary for 1 hour
 def load_ai_summary():
-    """
-    Loads the pre-written, professional AI summary from a text file.
-    """
+    """Load the pre-written AI summary from file"""
+    file_path = 'demo_ai_summary.txt'
+    
+    if not os.path.exists(file_path):
+        return "**AI Summary:** File not found. Please ensure demo_ai_summary.txt exists in the project root."
+    
     try:
-        with open(SUMMARY_FILE, "r") as f:
-            summary_text = f.read()
-        print("Demo AI summary loaded from .txt file successfully.")
-        return summary_text
-    except FileNotFoundError:
-        st.error(f"FATAL: '{SUMMARY_FILE}' not found! Please add it to the root folder.")
-        return "**Error:** AI Summary file ('demo_ai_summary.txt') not found."
+        # Try UTF-8 first (most common for text files with special characters)
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except UnicodeDecodeError:
+        # Fallback to latin-1 which can read any byte sequence
+        try:
+            with open(file_path, 'r', encoding='latin-1') as f:
+                return f.read()
+        except Exception as e:
+            return f"**Error:** Could not read AI summary: {str(e)}"
     except Exception as e:
-        st.error(f"An error occurred while loading {SUMMARY_FILE}: {e}")
-        return f"**Error:** Could not read AI summary file: {e}"
+        return f"**Error:** {str(e)}"
+
 
 # --- Self-Test (for debugging) ---
 if __name__ == "__main__":
