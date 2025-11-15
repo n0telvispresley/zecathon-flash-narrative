@@ -26,7 +26,7 @@ def get_base64_of_bin_file(bin_file):
 # --- Page Config (MUST be first Streamlit command) ---
 st.set_page_config(
     page_title="Dashboard | Flash Narrative",
-    page_icon="fn logo.jpeg", # <-- FIX 1: Removed ../
+    page_icon="fn logo.jpeg", # Browser tab icon
     layout="wide"
 )
 
@@ -49,8 +49,8 @@ GOLD = "#FFD700"; BLACK = "#000000"; BEIGE = "#F5F5DC"
 DARK_BG = "#1E1E1E"; LIGHT_TEXT = "#EAEAEA"
 GREEN_BG = "#28a745"; RED_BG = "#dc3545"
 
-# --- 2. LOAD BACKGROUND IMAGE ---
-bg_image_base64 = get_base64_of_bin_file("fn text.jpeg") # <-- FIX 2: Removed ../
+# --- Load Background Image ---
+bg_image_base64 = get_base64_of_bin_file("fn text.jpeg") 
 
 bg_image_css = f"""
     /* --- NEW: Semi-Transparent Watermark --- */
@@ -105,6 +105,13 @@ custom_css = f"""
     .kpi-box.good .label, .kpi-box.good .value {{ color: {BLACK}; }}
     .kpi-box.bad {{ background-color: {RED_BG}; border-color: {RED_BG}; }}
     .kpi-box.bad .label, .kpi-box.bad .value {{ color: {LIGHT_TEXT}; }}
+    
+    /* --- NEW: Make Title Logo Round --- */
+    div[data-testid="stHorizontalBlock"]:first-of-type [data-testid="stImage"] img {{
+        border-radius: 50%; /* Make it a circle */
+        border: 2px solid {GOLD}; /* Add gold border */
+        box-shadow: 0 0 10px {GOLD}; /* Add a glow */
+    }}
 </style>
 """
 st.markdown(custom_css, unsafe_allow_html=True)
@@ -131,7 +138,21 @@ def run_analysis_from_demo(brand, competitors, campaign_messages):
         st.session_state.kpis = kpi_results
         st.session_state.full_data = kpi_results.get('analyzed_data', [])
         all_text = " ".join([item.get("text", "") for item in st.session_state.full_data])
-        st.session_state.top_keywords = analysis.extract_keywords(all_text, brand, competitors)
+        
+        # Safely update stopwords and extract keywords
+        if hasattr(analysis, 'stop_words') and isinstance(analysis.stop_words, set):
+            temp_stop_words = analysis.stop_words.copy()
+            temp_stop_words.add(brand.lower())
+            for c in competitors:
+                temp_stop_words.add(c.lower())
+            
+            original_stopwords = analysis.stop_words
+            analysis.stop_words = temp_stop_words
+            st.session_state.top_keywords = analysis.extract_keywords(all_text, brand, competitors)
+            analysis.stop_words = original_stopwords
+        else:
+            st.session_state.top_keywords = analysis.extract_keywords(all_text, brand, competitors)
+
         st.success("Analysis Complete!")
 
         sentiment_ratio = st.session_state.kpis.get('sentiment_ratio', {})
@@ -156,12 +177,19 @@ def display_dashboard(brand, competitors, time_range_text, thresholds):
     kpis = st.session_state.kpis
     mis_val = kpis.get('mis', 0); mpi_val = kpis.get('mpi', 0)
     eng_val = kpis.get('engagement_rate', 0); reach_val = kpis.get('reach', 0)
-    mis_threshold = thresholds.get('mis_good', 100); mpi_threshold = thresholds.get('mpi_good', 20)
-    eng_threshold = thresholds.get('eng_good', 1.0); reach_threshold = thresholds.get('reach_good', 50000)
+    
+    # Get thresholds from the passed dictionary
+    mis_threshold = thresholds.get('mis_good', 100)
+    mpi_threshold = thresholds.get('mpi_good', 30) # Use new default
+    eng_threshold = thresholds.get('eng_good', 1000) # Use new default
+    reach_threshold = thresholds.get('reach_good', 10000000) # Use new default
+
+    # Determine CSS classes
     mis_class = "good" if mis_val >= mis_threshold else "bad"
     mpi_class = "good" if mpi_val >= mpi_threshold else "bad"
     eng_class = "good" if eng_val >= eng_threshold else "bad"
     reach_class = "good" if reach_val >= reach_threshold else "bad"
+    
     col1, col2, col3, col4 = st.columns(4)
     with col1: st.markdown(f'<div class="kpi-box {mis_class}"><div class="label">Media Impact (MIS)</div><div class="value">{mis_val:.0f}</div></div>', unsafe_allow_html=True)
     with col2: st.markdown(f'<div class="kpi-box {mpi_class}"><div class="label">Msg Penetration (MPI)</div><div class="value">{mpi_val:.1f}%</div></div>', unsafe_allow_html=True)
@@ -253,8 +281,8 @@ def display_dashboard(brand, competitors, time_range_text, thresholds):
                     try:
                         attachments = [(f"{brand}_Report.pdf", st.session_state.pdf_report_bytes, 'application/pdf'), (f"{brand}_Mentions.xlsx", st.session_state.excel_report_bytes, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')]
                         subject = f"FlashNarrative Report: {brand} ({time_range_text})"
-                        ai_summary_body = st.session_state.get("ai_summary_text", "(AI Summary failed)")
-                        body = f"Attached: FlashNarrative reports for {brand} ({time_range_text}).\n\nAI Summary:\n{ai_summary_body}"
+                        # Use simple body text
+                        body = f"Hello!\n\nPlease find attached the requested reports for {brand}.\n\nKind regards,\nThe Flash Narrative Team"
                         sent = servicenow_integration.send_report_email_with_attachments(email_to_send, subject, body, attachments)
                         if sent: st.toast(f"✅ Reports emailed to {email_to_send}!", icon="🎉"); st.success(f"Emailed to {email_to_send}!")
                         else: st.toast("❌ Email failed. Check logs/settings.", icon="🔥"); st.error("Email failed. Check logs & .env (Use App Password?).")
@@ -269,8 +297,14 @@ def main():
     if not st.session_state.get('logged_in', False):
         st.error("You must be logged in..."); st.page_link("app.py", label="Login", icon="🔒"); st.stop()
 
-    st.title("FlashNarrative AI Dashboard")
+    # --- NEW: Title with Logo ---
+    logo_col, title_col = st.columns([0.1, 0.9])
+    with logo_col:
+        st.image("fn logo.jpeg", width=60) # Small logo
+    with title_col:
+        st.title("Flash Narrative AI Dashboard")
     st.markdown("Monitor brand perception in real-time.")
+    # --- END NEW: Title with Logo ---
 
     # Init State
     if 'full_data' not in st.session_state: st.session_state.full_data = []
@@ -283,30 +317,51 @@ def main():
 
     # --- KPI Threshold Inputs ---
     with st.sidebar:
-        # --- FIX 3: ADDED logo path fix ---
-        st.image("fn logo.jpeg", width=100) # Path is relative to root
+        st.image("fn logo.jpeg", width=100) # Logo at top of sidebar
         
         st.header("⚙️ Settings")
         st.subheader("KPI Thresholds (Good ≥)")
+        # --- UPDATED DEFAULTS ---
         mis_thresh = st.number_input("Media Impact Score (MIS)", min_value=0, value=100, step=10, key="mis_thresh_input")
-        mpi_thresh = st.number_input("Message Penetration (%)", min_value=0, max_value=100, value=20, step=5, key="mpi_thresh_input")
-        eng_thresh = st.number_input("Avg. Social Engagement", min_value=0.0, value=1.0, step=0.1, format="%.1f", key="eng_thresh_input")
-        reach_thresh = st.number_input("Total Reach", min_value=0, value=50000, step=1000, key="reach_thresh_input")
+        mpi_thresh = st.number_input("Message Penetration (%)", min_value=0, max_value=100, value=30, step=5, key="mpi_thresh_input")
+        eng_thresh = st.number_input("Avg. Social Engagement", min_value=0.0, value=1000.0, step=10.0, format="%.1f", key="eng_thresh_input")
+        reach_thresh = st.number_input("Total Reach", min_value=0, value=10000000, step=10000, key="reach_thresh_input")
+        # --- END UPDATED DEFAULTS ---
+        
         thresholds = {
             "mis_good": mis_thresh, "mpi_good": mpi_thresh,
             "eng_good": eng_thresh, "reach_good": reach_thresh
         }
+        
+        st.divider()
+        # --- NEW: Logout Button ---
+        if st.button("Logout", use_container_width=True, key="logout_button"):
+            st.session_state["logged_in"] = False
+            st.session_state["username"] = ""
+            # Clear all session data on logout
+            st.session_state.full_data = []
+            st.session_state.kpis = {}
+            st.session_state.top_keywords = []
+            st.session_state.report_generated = False
+            st.session_state.pdf_report_bytes = None
+            st.session_state.excel_report_bytes = None
+            st.session_state.ai_summary_text = ""
+            st.rerun() # Rerun to force redirect to login page
+        # --- END NEW: Logout Button ---
+
 
     # Inputs
     st.subheader("Monitoring Setup")
     col_i1, col_i2, col_i3 = st.columns(3)
     with col_i1: brand = st.text_input("Brand Name", value="Zenith Bank", key="brand_input")
     with col_i2:
-        competitors_input = st.text_input("Competitors (comma-separated)", value="Access Bank,GTCO,First Bank,UBA", key="comp_input")
+        # --- UPDATED DEFAULTS ---
+        competitors_input = st.text_input("Competitors (comma-separated)", value="Fidelity Bank,GT Bank,Opay", key="comp_input")
         competitors = [c.strip() for c in competitors_input.split(",") if c.strip()]
     with col_i3: industry = st.selectbox("Industry", ['finance', 'default', 'Personal Brand', 'tech', 'healthcare', 'retail'], index=0, help="Affects RSS feed selection.", key="industry_select")
 
-    campaign_input = st.text_area("Campaign Messages (one per line)", value="Enhancing E-Channel Services\nFind Your Light", height=100, key="campaign_input")
+    # --- UPDATED DEFAULTS ---
+    campaign_input = st.text_area("Campaign Messages (one per line)", value="Zecathon\nZecathon 5.0", height=100, key="campaign_input")
     campaign_messages = [c.strip() for c in campaign_input.split("\n") if c.strip()]
     
     time_range_text = st.selectbox("Time Frame", ["Last 30 days (Demo)", "Last 7 days", "Last 24 hours"], index=0, key="time_select")
