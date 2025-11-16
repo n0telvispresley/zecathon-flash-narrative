@@ -11,6 +11,7 @@ import pandas as pd # Make sure pandas is imported
 try:
     nltk.data.find('tokenizers/punkt')
     nltk.data.find('corpora/stopwords')
+    nltk.data.find ( 'tokenizers/punkt_tab' ) # <-- ADDED THIS CHECK
 except LookupError:
     print("NLTK data not found. Downloading...")
     nltk.download('punkt', quiet=True)
