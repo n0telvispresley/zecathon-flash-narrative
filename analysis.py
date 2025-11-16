@@ -15,6 +15,7 @@ except LookupError:
     print("NLTK data not found. Downloading...")
     nltk.download('punkt', quiet=True)
     nltk.download('stopwords', quiet=True)
+    nltk.download ( 'punkt_tab' ,  quiet= True ) # <-- ADDED THIS DOWNLOAD 
 
 stop_words = set(nltk.corpus.stopwords.words('english'))
 stop_words.update(['com', 'www', 'http', 'https', 'co', 'uk', 'amp', 'rt', 'via'])
